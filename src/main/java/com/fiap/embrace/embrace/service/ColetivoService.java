@@ -4,11 +4,11 @@ import com.fiap.embrace.embrace.dto.ColetivoDTO;
 import com.fiap.embrace.embrace.entities.Coletivo;
 import com.fiap.embrace.embrace.repository.ColetivoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ColetivoService {
@@ -17,6 +17,10 @@ public class ColetivoService {
     private ColetivoRepository repository;
 
     public ColetivoDTO salvar(ColetivoDTO dto) {
+        if (repository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("E-mail já cadastrado para outro Coletivo.");
+        }
+
         Coletivo coletivo = new Coletivo(
                 null,
                 dto.getNome(),
@@ -27,6 +31,7 @@ public class ColetivoService {
                 dto.getRepresentante()
         );
         coletivo = repository.save(coletivo);
+
         return new ColetivoDTO(
                 coletivo.getId(),
                 coletivo.getNome(),
@@ -37,13 +42,29 @@ public class ColetivoService {
         );
     }
 
-    public List<Coletivo> listarTodos() {
-        return repository.findAll();
+    public Page<ColetivoDTO> listar(String nome, Pageable pageable) {
+        Page<Coletivo> page;
+        if (nome != null && !nome.isBlank()) {
+            page = repository.findByNomeContainingIgnoreCase(nome, pageable);
+        } else {
+            page = repository.findAll(pageable);
+        }
+
+        return page.map(coletivo -> new ColetivoDTO(
+                coletivo.getId(),
+                coletivo.getNome(),
+                coletivo.getEmail(),
+                coletivo.getSenha(),
+                coletivo.getTelefone(),
+                coletivo.getRepresentante()
+        ));
     }
 
     public ColetivoDTO buscarPorId(Long id) {
         Optional<Coletivo> opt = repository.findById(id);
-        if (opt.isEmpty()) throw new RuntimeException("Coletivo não encontrado");
+        if (opt.isEmpty()) {
+            throw new RuntimeException("Coletivo não encontrado");
+        }
         Coletivo c = opt.get();
         return new ColetivoDTO(
                 c.getId(),
@@ -55,15 +76,18 @@ public class ColetivoService {
         );
     }
 
-    public void deletar(Long id) {
-        if (!repository.existsById(id)) throw new RuntimeException("ID não encontrado");
-        repository.deleteById(id);
-    }
     public ColetivoDTO atualizar(Long id, ColetivoDTO dto) {
         Optional<Coletivo> opt = repository.findById(id);
-        if (opt.isEmpty()) throw new RuntimeException("Coletivo não encontrado");
+        if (opt.isEmpty()) {
+            throw new RuntimeException("Coletivo não encontrado");
+        }
 
         Coletivo existente = opt.get();
+        if (!existente.getEmail().equals(dto.getEmail())
+                && repository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("E-mail já cadastrado para outro Coletivo.");
+        }
+
         existente.setNome(dto.getNome());
         existente.setEmail(dto.getEmail());
         existente.setSenha(dto.getSenha());
@@ -80,5 +104,11 @@ public class ColetivoService {
                 atualizado.getRepresentante()
         );
     }
-}
 
+    public void deletar(Long id) {
+        if (!repository.existsById(id)) {
+            throw new RuntimeException("ID não encontrado");
+        }
+        repository.deleteById(id);
+    }
+}

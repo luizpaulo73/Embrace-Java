@@ -16,7 +16,9 @@ public class UsuarioService {
 
     public UsuarioDTO login(String email, String senha) {
         Optional<Usuario> opt = repository.findByEmailAndSenha(email, senha);
-        if (opt.isEmpty()) throw new RuntimeException("Usuário ou senha inválidos");
+        if (opt.isEmpty()) {
+            throw new RuntimeException("Usuário ou senha inválidos");
+        }
 
         Usuario user = opt.get();
         return new UsuarioDTO(

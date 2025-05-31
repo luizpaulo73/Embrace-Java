@@ -7,20 +7,20 @@ public class ColetivoDTO {
 
     private Long id;
 
-    @NotBlank
+    @NotBlank(message = "O nome é obrigatório")
     private String nome;
 
-    @Email
-    @NotBlank
+    @NotBlank(message = "O e-mail é obrigatório")
+    @Email(message = "O e-mail deve ter formato válido")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "A senha é obrigatória")
     private String senha;
 
-    @NotBlank
+    @NotBlank(message = "O telefone é obrigatório")
     private String telefone;
 
-    @NotBlank
+    @NotBlank(message = "O representante é obrigatório")
     private String representante;
 
     public ColetivoDTO() {}

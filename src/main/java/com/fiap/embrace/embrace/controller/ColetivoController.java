@@ -10,10 +10,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "Coletivos", description = "Operações de CRUD para Coletivos")
 @RestController
@@ -37,23 +37,26 @@ public class ColetivoController {
             }
     )
     @PostMapping
-    public ResponseEntity<ColetivoDTO> criar(
-            @org.springframework.web.bind.annotation.RequestBody @Valid ColetivoDTO dto
-    ) {
+    public ResponseEntity<ColetivoDTO> criar(@RequestBody @Valid ColetivoDTO dto) {
         return ResponseEntity.ok(service.salvar(dto));
     }
 
     @Operation(
-            summary = "Lista todos os Coletivos",
+            summary = "Lista Coletivos (com paginação, ordenação e filtro por nome)",
+            description = "Use `nome` para filtrar pelo nome (OU parte do nome). " +
+                    "Para controlar página e tamanho, envie `page`, `size` e `sort`.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Lista de coletivos",
+                    @ApiResponse(responseCode = "200", description = "Página de Coletivos",
                             content = @Content(schema = @Schema(implementation = ColetivoDTO.class, type = "array"))
                     )
             }
     )
     @GetMapping
-    public ResponseEntity<List<Coletivo>> listarTodos() {
-        return ResponseEntity.ok(service.listarTodos());
+    public ResponseEntity<Page<ColetivoDTO>> listar(
+            @RequestParam(value = "nome", required = false) String nome,
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(service.listar(nome, pageable));
     }
 
     @Operation(
@@ -87,7 +90,7 @@ public class ColetivoController {
     @PutMapping("/{id}")
     public ResponseEntity<ColetivoDTO> atualizar(
             @PathVariable Long id,
-            @org.springframework.web.bind.annotation.RequestBody @Valid ColetivoDTO dto
+            @RequestBody @Valid ColetivoDTO dto
     ) {
         return ResponseEntity.ok(service.atualizar(id, dto));
     }

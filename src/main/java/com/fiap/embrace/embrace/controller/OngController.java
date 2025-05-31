@@ -10,10 +10,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "ONGs", description = "Operações de CRUD para ONGs")
 @RestController
@@ -31,37 +31,42 @@ public class OngController {
             ),
             responses = {
                     @ApiResponse(responseCode = "200", description = "ONG cadastrada com sucesso",
-                            content = @Content(schema = @Schema(implementation = Ong.class))
+                            content = @Content(schema = @Schema(implementation = OngDTO.class))
                     ),
                     @ApiResponse(responseCode = "400", description = "Dados inválidos")
             }
     )
     @PostMapping("/cadastrar")
-    public ResponseEntity<Ong> cadastrar(
-            @org.springframework.web.bind.annotation.RequestBody @Valid OngDTO dto
-    ) {
+    public ResponseEntity<Ong> cadastrar(@RequestBody @Valid OngDTO dto) {
         Ong novaOng = service.cadastrarOng(dto);
         return ResponseEntity.ok(novaOng);
     }
 
     @Operation(
-            summary = "Lista todas as ONGs",
+            summary = "Lista ONGs (com paginação, ordenação e filtros)",
+            description = "Você pode filtrar por `nome` e/ou `cnpj`. " +
+                    "Para controlar página, tamanho e ordenação, use `page`, `size` e `sort`.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Lista de ONGs",
-                            content = @Content(schema = @Schema(implementation = Ong.class, type = "array"))
+                    @ApiResponse(responseCode = "200", description = "Página de ONGs",
+                            content = @Content(schema = @Schema(implementation = OngDTO.class, type = "array"))
                     )
             }
     )
     @GetMapping
-    public ResponseEntity<List<Ong>> listarTodas() {
-        return ResponseEntity.ok(service.listarTodas());
+    public ResponseEntity<Page<OngDTO>> listarTodas(
+            @RequestParam(value = "nome", required = false) String nome,
+            @RequestParam(value = "cnpj", required = false) String cnpj,
+            Pageable pageable
+    ) {
+        Page<OngDTO> resultados = service.listar(nome, cnpj, pageable);
+        return ResponseEntity.ok(resultados);
     }
 
     @Operation(
             summary = "Busca uma ONG por ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "ONG encontrada",
-                            content = @Content(schema = @Schema(implementation = Ong.class))
+                            content = @Content(schema = @Schema(implementation = OngDTO.class))
                     ),
                     @ApiResponse(responseCode = "404", description = "ONG não encontrada")
             }
@@ -79,7 +84,7 @@ public class OngController {
             ),
             responses = {
                     @ApiResponse(responseCode = "200", description = "ONG atualizada",
-                            content = @Content(schema = @Schema(implementation = Ong.class))
+                            content = @Content(schema = @Schema(implementation = OngDTO.class))
                     ),
                     @ApiResponse(responseCode = "404", description = "ONG não encontrada"),
                     @ApiResponse(responseCode = "400", description = "Dados inválidos")
@@ -88,9 +93,10 @@ public class OngController {
     @PutMapping("/{id}")
     public ResponseEntity<Ong> atualizar(
             @PathVariable Long id,
-            @org.springframework.web.bind.annotation.RequestBody @Valid OngDTO dto
+            @RequestBody @Valid OngDTO dto
     ) {
-        return ResponseEntity.ok(service.atualizar(id, dto));
+        Ong atualizada = service.atualizar(id, dto);
+        return ResponseEntity.ok(atualizada);
     }
 
     @Operation(

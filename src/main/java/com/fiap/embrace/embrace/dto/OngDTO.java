@@ -3,23 +3,54 @@ package com.fiap.embrace.embrace.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+
 public class OngDTO {
 
-    @NotBlank
+    private Long id;
+
+    @NotBlank(message = "O nome é obrigatório")
     private String nome;
 
-    @Email
-    @NotBlank
+    @NotBlank(message = "O e-mail é obrigatório")
+    @Email(message = "O e-mail deve ter formato válido")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "A senha é obrigatória")
     private String senha;
 
-    @NotBlank
+    @NotBlank(message = "O telefone é obrigatório")
     private String telefone;
 
-    @NotBlank
+    @NotBlank(message = "O CNPJ é obrigatório")
     private String cnpj;
+
+    public OngDTO() {}
+
+    public OngDTO(String nome, String email, String senha, String telefone, String cnpj) {
+        this.nome = nome;
+        this.email = email;
+        this.senha = senha;
+        this.telefone = telefone;
+        this.cnpj = cnpj;
+    }
+
+    public OngDTO(Long id, String nome, String email, String senha, String telefone, String cnpj) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.senha = senha;
+        this.telefone = telefone;
+        this.cnpj = cnpj;
+    }
+
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getNome() {
         return nome;
