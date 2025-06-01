@@ -1,13 +1,15 @@
 package com.fiap.embrace.embrace.service;
 
 import com.fiap.embrace.embrace.dto.ColetivoDTO;
-import com.fiap.embrace.embrace.entities.Coletivo;
-import com.fiap.embrace.embrace.repository.ColetivoRepository;
+import com.fiap.embrace.embrace.entities.*;
+import com.fiap.embrace.embrace.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -15,6 +17,18 @@ public class ColetivoService {
 
     @Autowired
     private ColetivoRepository repository;
+
+    @Autowired
+    private CampanhaRepository campanhaRepo;
+
+    @Autowired
+    private AnuncioRepository anuncioRepo;
+
+    @Autowired
+    private DoacaoRepository doacaoRepo;
+
+    @Autowired
+    private OfertaRepository ofertaRepo;
 
     public ColetivoDTO salvar(ColetivoDTO dto) {
         if (repository.existsByEmail(dto.getEmail())) {
@@ -105,10 +119,31 @@ public class ColetivoService {
         );
     }
 
+    @Transactional
     public void deletar(Long id) {
-        if (!repository.existsById(id)) {
+        Optional<Coletivo> opt = repository.findById(id);
+        if (opt.isEmpty()) {
             throw new RuntimeException("ID não encontrado");
         }
+        Coletivo coletivo = opt.get();
+
+        // Apagar campanhas criadas pelo coletivo
+        List<Campanha> campanhas = campanhaRepo.findByCriadorId(coletivo.getId());
+        campanhaRepo.deleteAll(campanhas);
+
+        // Apagar anúncios criados pelo coletivo
+        List<AnuncioMarketplace> anuncios = anuncioRepo.findByAutorId(coletivo.getId());
+        anuncioRepo.deleteAll(anuncios);
+
+        // Apagar doações feitas pelo coletivo
+        List<Doacao> doacoes = doacaoRepo.findByDoadorId(coletivo.getId());
+        doacaoRepo.deleteAll(doacoes);
+
+        // Apagar ofertas feitas pelo coletivo
+        List<Oferta> ofertas = ofertaRepo.findByDoadorId(coletivo.getId());
+        ofertaRepo.deleteAll(ofertas);
+
+        // Excluir o coletivo
         repository.deleteById(id);
     }
 }

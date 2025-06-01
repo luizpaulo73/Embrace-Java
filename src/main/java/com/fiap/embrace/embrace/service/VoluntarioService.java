@@ -1,13 +1,16 @@
 package com.fiap.embrace.embrace.service;
+import com.fiap.embrace.embrace.repository.*;
 
 import com.fiap.embrace.embrace.dto.VoluntarioDTO;
-import com.fiap.embrace.embrace.entities.Voluntario;
+import com.fiap.embrace.embrace.entities.*;
 import com.fiap.embrace.embrace.repository.VoluntarioRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -15,6 +18,18 @@ public class VoluntarioService {
 
     @Autowired
     private VoluntarioRepository repository;
+
+    @Autowired
+    private OfertaRepository ofertaRepo;
+
+    @Autowired
+    private DoacaoRepository doacaoRepo;
+
+    @Autowired
+    private AnuncioRepository anuncioRepo;
+
+    @Autowired
+    private CampanhaRepository campanhaRepo;
 
     public Voluntario cadastrarVoluntario(VoluntarioDTO dto) {
         if (repository.existsByEmail(dto.getEmail())) {
@@ -68,8 +83,23 @@ public class VoluntarioService {
         return repository.save(voluntario);
     }
 
+    @Transactional
     public void deletar(Long id) {
         Voluntario voluntario = buscarPorId(id);
+
+        List<Oferta> ofertas = ofertaRepo.findByDoadorId(voluntario.getId());
+        ofertaRepo.deleteAll(ofertas);
+
+        List<Doacao> doacoes = doacaoRepo.findByDoadorId(voluntario.getId());
+        doacaoRepo.deleteAll(doacoes);
+
+        List<AnuncioMarketplace> anuncios = anuncioRepo.findByAutorId(voluntario.getId());
+        anuncioRepo.deleteAll(anuncios);
+
+        List<Campanha> campanhas = campanhaRepo.findByCriadorId(voluntario.getId());
+        campanhaRepo.deleteAll(campanhas);
+
         repository.delete(voluntario);
     }
+
 }
