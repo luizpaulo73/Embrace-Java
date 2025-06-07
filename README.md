@@ -68,7 +68,6 @@ src/main/java/com/fiap/embrace/embrace
 ├── repository   # Interfaces JPA para acesso aos dados
 ├── service      # Regras de negócio (camada intermediária entre controller e repositório)
 └── EmbraceApplication.java  # Classe principal da aplicação Spring Boot
-```json
 
 <parent>
   <groupId>org.springframework.boot</groupId>
