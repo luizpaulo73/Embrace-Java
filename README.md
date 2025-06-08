@@ -1146,7 +1146,7 @@ URL: http://localhost:8080/anuncios/1/doadores
 
 <a id="como-executar"></a>
 
-▶️ Como Executar
+## ▶️ Como Executar
 
 1. Clone o repositório
 
